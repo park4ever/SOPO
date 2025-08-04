@@ -1,0 +1,31 @@
+# === Build files ===
+/build/
+/target/
+.gradle/
+out/
+
+# === IDE ===
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.sts4-cache
+.apt_generated
+
+# === System ===
+.DS_Store
+Thumbs.db
+
+# === VSCode ===
+.vscode/
+
+# === Logs ===
+*.log
+
+# === Environment/Secrets ===
+.env
+application-local.yml
+application-*.yml
