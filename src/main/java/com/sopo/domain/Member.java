@@ -6,13 +6,20 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.GenerationType.*;
+import static lombok.AccessLevel.*;
+
 @Entity
 @Getter
 @Table(name = "member")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = PROTECTED)
 public class Member extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "member_id")
     private Long id;
 
@@ -28,28 +35,34 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String phoneNumber;
 
-    @Embedded
-    private Address address;
+    @OneToMany(mappedBy = "member", cascade = ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_enabled")
     private boolean isEnabled;
 
-    private Member(String email, String password, String nickname, String phoneNumber, Address address, Role role) {
+    private Member(String email, String password, String nickname, String phoneNumber, Role role) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
-        this.address = address;
         this.role = role;
         this.isEnabled = true;
     }
 
-    public static Member create(String email, String encryptedPassword, String nickname, String phoneNumber, Address address, Role role) {
-        return new Member(email, encryptedPassword, nickname, phoneNumber, address, role);
+    public static Member create(String email, String encryptedPassword, String nickname, String phoneNumber, Role role) {
+        return new Member(email, encryptedPassword, nickname, phoneNumber, role);
+    }
+
+    public void addAddress(Address address) {
+        addresses.add(address);
+        if (address.getMember() != this) {
+            address.assignMember(this);
+        }
     }
 
     public void changePassword(String encodedPassword) {
