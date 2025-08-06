@@ -1,0 +1,81 @@
+package com.sopo.domain.item;
+
+import com.sopo.common.BaseEntity;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import static jakarta.persistence.FetchType.*;
+import static jakarta.persistence.GenerationType.*;
+import static lombok.AccessLevel.*;
+
+@Entity
+@Getter
+@Table(name = "item_option")
+@NoArgsConstructor(access = PROTECTED)
+public class ItemOption extends BaseEntity {
+
+    @Id @GeneratedValue(strategy = IDENTITY)
+    @Column(name = "item_option_id")
+    private Long id;
+
+    @ManyToOne(fetch = LAZY, optional = false)
+    @JoinColumn(name = "item_id")
+    private Item item;
+
+    @ManyToOne(fetch = LAZY, optional = false)
+    @JoinColumn(name = "color_id")
+    private ItemColor color;
+
+    @ManyToOne(fetch = LAZY, optional = false)
+    @JoinColumn(name = "size_id")
+    private ItemSize size;
+
+    @Column(nullable = false)
+    private int stock;
+
+    @Column(nullable = false, name = "is_sold_out")
+    private boolean isSoldOut;
+
+    public ItemOption(ItemColor color, ItemSize size, int stock) {
+        this.color = color;
+        this.size = size;
+        this.stock = stock;
+        this.isSoldOut = (stock <= 0);
+    }
+
+    public static ItemOption create(ItemColor color, ItemSize size, int stock) {
+        return new ItemOption(color, size, stock);
+    }
+
+    public void assignItem(Item item) {
+        this.item = item;
+    }
+
+    public void decreaseStock(int quantity) {
+        if (this.stock < quantity) {
+            throw new IllegalArgumentException("상품의 재고가 부족합니다.");
+        }
+        this.stock -= quantity;
+        if (this.stock == 0) {
+            this.isSoldOut = true;
+        }
+    }
+
+    public void increaseStock(int quantity) {
+        this.stock += quantity;
+        if (this.stock > 0) {
+            this.isSoldOut = false;
+        }
+    }
+
+    public void markSoldOut() {
+        this.isSoldOut = true;
+    }
+
+    public void markInStock() {
+        if (this.stock > 0) {
+            this.isSoldOut = false;
+        }
+    }
+}

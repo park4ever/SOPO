@@ -1,4 +1,4 @@
-package com.sopo.domain;
+package com.sopo.domain.item;
 
 public enum ItemStatus {
     ON_SALE,    //판매중
