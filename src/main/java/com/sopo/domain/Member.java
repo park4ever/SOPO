@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 
@@ -23,7 +24,7 @@ public class Member extends BaseEntity {
     @Column(name = "member_id")
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 30)
     private String email;
 
     @Column(nullable = false)
@@ -32,13 +33,13 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String nickname;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private String phoneNumber;
 
     @OneToMany(mappedBy = "member", cascade = ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(STRING)
     @Column(nullable = false)
     private Role role;
 
