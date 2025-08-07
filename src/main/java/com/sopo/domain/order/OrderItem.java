@@ -38,7 +38,7 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
-    public OrderItem(ItemOption itemOption, int quantity) {
+    private OrderItem(ItemOption itemOption, int quantity) {
         this.itemOption = itemOption;
         this.quantity = quantity;
         this.totalPrice = calculateTotalPrice(itemOption, quantity);

@@ -1,6 +1,6 @@
 package com.sopo.security;
 
-import com.sopo.domain.Member;
+import com.sopo.domain.member.Member;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

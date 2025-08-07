@@ -1,4 +1,4 @@
-package com.sopo.domain;
+package com.sopo.domain.member;
 
 public enum Role {
     USER,

@@ -1,8 +1,7 @@
-package com.sopo.domain;
+package com.sopo.domain.member;
 
 import com.sopo.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,8 +29,8 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 20)
-    private String nickname;
+    @Column(nullable = false, length = 10)
+    private String name;
 
     @Column(nullable = false, length = 20)
     private String phoneNumber;
@@ -46,17 +45,17 @@ public class Member extends BaseEntity {
     @Column(nullable = false, name = "is_enabled")
     private boolean isEnabled;
 
-    private Member(String email, String password, String nickname, String phoneNumber, Role role) {
+    private Member(String email, String password, String name, String phoneNumber, Role role) {
         this.email = email;
         this.password = password;
-        this.nickname = nickname;
+        this.name = name;
         this.phoneNumber = phoneNumber;
         this.role = role;
         this.isEnabled = true;
     }
 
-    public static Member create(String email, String encryptedPassword, String nickname, String phoneNumber, Role role) {
-        return new Member(email, encryptedPassword, nickname, phoneNumber, role);
+    public static Member create(String email, String encryptedPassword, String name, String phoneNumber, Role role) {
+        return new Member(email, encryptedPassword, name, phoneNumber, role);
     }
 
     public void addAddress(Address address) {

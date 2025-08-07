@@ -1,7 +1,7 @@
 package com.sopo.domain.item;
 
 import com.sopo.common.BaseEntity;
-import com.sopo.domain.Member;
+import com.sopo.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
