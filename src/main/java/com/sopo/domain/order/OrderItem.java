@@ -36,24 +36,48 @@ public class OrderItem extends BaseEntity {
     private int quantity;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price; //주문 시점 가격 스냅샷
+
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
     private OrderItem(ItemOption itemOption, int quantity) {
         this.itemOption = itemOption;
         this.quantity = quantity;
-        this.totalPrice = calculateTotalPrice(itemOption, quantity);
+        this.price = itemOption.getItem().getPrice(); //주문 시점 가격 가져오기
+        this.totalPrice = calculateTotalPrice();
     }
 
     public static OrderItem create(ItemOption itemOption, int quantity) {
         return new OrderItem(itemOption, quantity);
     }
 
-    private BigDecimal calculateTotalPrice(ItemOption itemOption, int quantity) {
-        Item item = itemOption.getItem();
-        return item.getPrice().multiply(BigDecimal.valueOf(quantity));
+    private BigDecimal calculateTotalPrice() {
+        return price.multiply(BigDecimal.valueOf(quantity));
     }
 
     public void assignOrder(Order order) {
         this.order = order;
+    }
+
+    public void increaseQuantity(int amount) {
+        this.quantity += amount;
+        this.totalPrice = calculateTotalPrice();
+    }
+
+    public void decreaseQuantity(int amount) {
+        if (this.quantity - amount < 1) {
+            throw new IllegalArgumentException("최소 수량은 1개 이상이어야 합니다.");
+        }
+        this.quantity -= amount;
+        this.totalPrice = calculateTotalPrice();
+    }
+
+    public void updateQuantity(int quantity) {
+        if (quantity < 1) {
+            throw new IllegalArgumentException("최소 수량은 1개 이상이어야 합니다.");
+        }
+        this.quantity = quantity;
+        this.totalPrice = calculateTotalPrice();
     }
 }

@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static jakarta.persistence.FetchType.*;
@@ -50,6 +51,14 @@ public class MemberCoupon extends BaseEntity {
 
     public static MemberCoupon issueTo(Member member, Coupon coupon) {
         return new MemberCoupon(member, coupon);
+    }
+
+    public boolean isExpired() {
+        return coupon.isExpired();
+    }
+
+    public boolean canBeUsed(BigDecimal orderPrice) {
+        return !used && !isExpired() && coupon.isAvailable(orderPrice);
     }
 
     public void markUsed(Order order) {

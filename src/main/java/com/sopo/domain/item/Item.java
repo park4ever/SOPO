@@ -35,7 +35,7 @@ public class Item extends BaseEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(length = 30)
+    @Column(nullable = false, length = 30)
     private String brand;
 
     @ManyToOne(fetch = LAZY, optional = false)
@@ -103,6 +103,10 @@ public class Item extends BaseEntity {
 
     public void increaseSalesVolume(int amount) {
         this.salesVolume += amount;
+    }
+
+    public void decreaseSalesVolume(int amount) {
+        this.salesVolume = Math.max(0, this.salesVolume - amount);
     }
 
     public void changeStatus(ItemStatus status) {

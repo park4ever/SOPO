@@ -23,10 +23,10 @@ public class Address extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 200)
     private String roadAddress; //도로명 주소
 
-    @Column(length = 100)
+    @Column(length = 200)
     private String landAddress;    //지번 주소
 
     @Column(length = 100)
@@ -53,8 +53,8 @@ public class Address extends BaseEntity {
         }
     }
 
-    public static Address create(Member member, String roadAddress, String jibunAddress, String detailAddress, String zipcode, boolean isDefault) {
-        Address address = new Address(roadAddress, jibunAddress, detailAddress, zipcode, isDefault);
+    public static Address create(Member member, String roadAddress, String landAddress, String detailAddress, String zipcode, boolean isDefault) {
+        Address address = new Address(roadAddress, landAddress, detailAddress, zipcode, isDefault);
         address.assignMember(member);
         return address;
     }

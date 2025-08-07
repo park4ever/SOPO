@@ -52,6 +52,7 @@ public class ItemOption extends BaseEntity {
         this.item = item;
     }
 
+    //TODO 동시 주문 시 재고 차감에 대한 동시성 보장 필요 (서비스 단에서 Lock 처리 예정)
     public void decreaseStock(int quantity) {
         if (this.stock < quantity) {
             throw new IllegalArgumentException("상품의 재고가 부족합니다.");

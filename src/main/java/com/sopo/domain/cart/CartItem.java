@@ -17,6 +17,11 @@ import static lombok.AccessLevel.*;
 @NoArgsConstructor(access = PROTECTED)
 public class CartItem extends BaseEntity {
 
+    /* TODO [서비스 고려사항]
+     - 동일한 ItemOption을 중복 추가 시 기존 항목 수량 증가 vs 새 항목 추가?
+     - ItemOption이 품절/삭제되었을 때 장바구니 항목은 유지 or 자동 제거?
+     → 정책 결정 필요 (UX 관점 포함) */
+
     @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "cart_item_id")
     private Long id;

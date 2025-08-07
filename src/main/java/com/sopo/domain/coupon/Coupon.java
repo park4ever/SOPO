@@ -57,6 +57,14 @@ public class Coupon extends BaseEntity {
         return new Coupon(name, discountType, discountValue, minOrderPrice, expirationDate);
     }
 
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(this.expirationDate);
+    }
+
+    public boolean isAvailable(BigDecimal orderPrice) {
+        return !isExpired() && orderPrice.compareTo(this.minOrderPrice) >= 0;
+    }
+
     public void markAsDeleted() {
         this.isDeleted = true;
     }
