@@ -14,7 +14,7 @@ import static lombok.AccessLevel.*;
 @Getter
 @Table(name = "qna_answer",
     uniqueConstraints = {
-            @UniqueConstraint(name = "uk_qna_answer_question", columnNames = "question_id")
+        @UniqueConstraint(name = "uk_qna_answer_question", columnNames = "question_id")
     }
 )
 @NoArgsConstructor(access = PROTECTED)
