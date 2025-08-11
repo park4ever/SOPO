@@ -1,8 +1,7 @@
-package com.sopo.domain.review;
+package com.sopo.domain.community.review;
 
-import com.sopo.common.BaseEntity;
+import com.sopo.domain.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

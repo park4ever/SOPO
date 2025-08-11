@@ -1,16 +1,14 @@
-package com.sopo.domain.qna;
+package com.sopo.domain.community.qna;
 
-import com.sopo.common.BaseEntity;
+import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.item.Item;
 import com.sopo.domain.member.Member;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-import static com.sopo.domain.qna.QnaStatus.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
 import static jakarta.persistence.GenerationType.*;
@@ -61,7 +59,7 @@ public class Question extends BaseEntity {
         this.title = title;
         this.content = content;
         this.isPrivate = isPrivate;     //TODO 기본값은 컨트롤러나 서비스에서 false로 설정.
-        this.status = OPEN;             //생성 시 항상 OPEN
+        this.status = QnaStatus.OPEN;             //생성 시 항상 OPEN
     }
 
     public static Question create(Member asker, Item item, String title, String content, boolean isPrivate) {
@@ -76,14 +74,14 @@ public class Question extends BaseEntity {
     }
 
     public void markAnswered() {
-        if (this.status == ANSWERED) return;
-        this.status = ANSWERED;
+        if (this.status == QnaStatus.ANSWERED) return;
+        this.status = QnaStatus.ANSWERED;
         this.answeredAt = LocalDateTime.now();
     }
 
     public void close() {
-        if (this.status == CLOSED) return;
-        this.status = CLOSED;
+        if (this.status == QnaStatus.CLOSED) return;
+        this.status = QnaStatus.CLOSED;
     }
 
     //TODO 컨트롤러나 서비스에서 "답변 전(OPEN) + 작성자" 확인 후 호출
@@ -94,6 +92,6 @@ public class Question extends BaseEntity {
 
     //상태가 OPEN인지 확인(서비스에서 수정 가능 여부 판단에 필요)
     public boolean isOpen() {
-        return this.status == OPEN;
+        return this.status == QnaStatus.OPEN;
     }
 }

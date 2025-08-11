@@ -1,9 +1,8 @@
 package com.sopo.domain.cart;
 
-import com.sopo.common.BaseEntity;
+import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.item.ItemOption;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

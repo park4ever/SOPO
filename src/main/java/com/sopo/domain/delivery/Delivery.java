@@ -1,6 +1,6 @@
 package com.sopo.domain.delivery;
 
-import com.sopo.common.BaseEntity;
+import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.member.Address;
 import com.sopo.domain.order.Order;
 import jakarta.persistence.*;

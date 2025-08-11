@@ -1,6 +1,6 @@
 package com.sopo.domain.coupon;
 
-import com.sopo.common.BaseEntity;
+import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.member.Member;
 import com.sopo.domain.order.Order;
 import jakarta.persistence.*;

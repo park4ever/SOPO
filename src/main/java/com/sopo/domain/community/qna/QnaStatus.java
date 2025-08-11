@@ -1,4 +1,4 @@
-package com.sopo.domain.qna;
+package com.sopo.domain.community.qna;
 
 public enum QnaStatus {
     OPEN,       //질문 등록, 답변 없음
