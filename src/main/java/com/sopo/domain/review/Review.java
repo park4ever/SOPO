@@ -54,6 +54,9 @@ public class Review extends BaseEntity {
     }
 
     public boolean isOwner(Member loginMember) {
-        return this.member.equals(loginMember);
+        return loginMember != null
+            && this.member != null
+            && this.member.getId() != null
+            && this.member.getId().equals(loginMember.getId());
     }
 }
