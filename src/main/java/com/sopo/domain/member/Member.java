@@ -72,6 +72,18 @@ public class Member extends BaseEntity {
         this.password = encodedPassword;
     }
 
+    public void changeProfile(String name, String phoneNumber) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("이름은 비어 있을 수 없습니다.");
+        }
+
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            throw new IllegalArgumentException("전화번호는 비어 있을 수 없습니다.");
+        }
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+    }
+
     public void disable() {
         this.isEnabled = false;
     }
