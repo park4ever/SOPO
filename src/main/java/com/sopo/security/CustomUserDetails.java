@@ -1,12 +1,15 @@
 package com.sopo.security;
 
 import com.sopo.domain.member.Member;
+import com.sopo.domain.member.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Getter
 public class CustomUserDetails implements UserDetails {
@@ -16,6 +19,12 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(Member member) {
         this.member = member;
     }
+
+    //편의 접근자(세션 DTO 만들 때 사용)
+    public Long getId() { return member.getId(); }
+    public String getName() { return member.getName(); }
+    public Role getRole() { return member.getRole(); }
+
 
     @Override
     public String getUsername() {
@@ -29,7 +38,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(() -> member.getRole().name());
+        return List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
     }
 
     @Override
@@ -49,6 +58,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return member.isEnabled();
     }
 }
