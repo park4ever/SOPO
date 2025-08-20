@@ -1,1 +1,1 @@
--- SOPO DB baseline (no-op). Further DDL will be added in V2+ scripts.
+-- SOPO DB baseline (no-op)

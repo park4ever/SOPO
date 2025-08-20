@@ -1,6 +1,7 @@
-package com.sopo.domain.member;
+package com.sopo.domain.address;
 
 import com.sopo.domain.common.BaseEntity;
+import com.sopo.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -57,6 +58,15 @@ public class Address extends BaseEntity {
         Address address = new Address(roadAddress, landAddress, detailAddress, zipcode, isDefault);
         address.assignMember(member);
         return address;
+    }
+
+    public void change(String roadAddress, String landAddress, String detailAddress, String zipcode) {
+        if (roadAddress == null || roadAddress.isBlank()) throw new IllegalArgumentException("도로명 주소는 필수입니다.");
+        if (zipcode == null || zipcode.isBlank()) throw new IllegalArgumentException("우편번호는 필수입니다.");
+        this.roadAddress = roadAddress;
+        this.landAddress = landAddress;
+        this.detailAddress = detailAddress;
+        this.zipcode = zipcode;
     }
 
     public void markAsDefault() {
