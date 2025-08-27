@@ -42,6 +42,8 @@ public class ItemImage extends BaseEntity {
         return new ItemImage(imageUrl, isThumbnail, sortOrder);
     }
 
+    public void changeUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
     public void assignItem(Item item) {
         this.item = item;
     }

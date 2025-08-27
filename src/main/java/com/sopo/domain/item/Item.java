@@ -7,8 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
@@ -79,13 +78,56 @@ public class Item extends BaseEntity {
         return new Item(name, description, price, brand, seller, category, ItemStatus.ON_SALE);
     }
 
+    //값 변경
+    public void changeName(String name) { this.name = name; }
+    public void changeDescription(String description) { this.description = description; }
+    public void changePrice(BigDecimal price) { this.price = price; }
+    public void changeBrand(String brand) { this.brand = brand; }
+    public void changeCategory(ItemCategory category) { this.category = category; }
+
+    //컬렉션 편의
+    public Optional<ItemImage> findImage(Long imageId) {
+        return images.stream().filter(i -> Objects.equals(i.getId(), imageId)).findFirst();
+    }
+    public Optional<ItemOption> findOption(Long optionId) {
+        return options.stream().filter(o -> Objects.equals(o.getId(), optionId)).findFirst();
+    }
+    public void removeImage(Long imageId) {
+        findImage(imageId).ifPresent(images::remove);
+    }
+    public void removeOption(Long optionId) {
+        findOption(optionId).ifPresent(options::remove);
+    }
+
+    //이미지 정렬/썸네일 보조
+    public int nextImageSortOrder() {
+        return images.stream().mapToInt(ItemImage::getSortOrder).max().orElse(0) + 1;
+    }
+    public void setThumbnail(Long imageId) {
+        ItemImage target = findImage(imageId).orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다."));
+        images.forEach(ItemImage::unsetThumbnail);
+        target.markAsThumbnail();
+    }
+    public void reorderImages(Map<Long, Integer> orders) {
+        for (ItemImage img : images) {
+            Integer so = orders.get(img.getId());
+            if (so != null) img.changeSortOrder(so);
+        }
+    }
+
+    //옵션 중복 확인(조합 중복 방지 보조)
+    public boolean hasOption(ItemColor color, ItemSize size) {
+        return options.stream().anyMatch(o ->
+                Objects.equals(o.getColor().getId(), color.getId()) &&
+                Objects.equals(o.getSize().getId(), size.getId()));
+    }
+
     public void addImage(ItemImage image) {
         images.add(image);
         if (image.getItem() != this) {
             image.assignItem(this);
         }
     }
-
     public void addOption(ItemOption option) {
         options.add(option);
         if (option.getItem() != this) {
@@ -96,19 +138,15 @@ public class Item extends BaseEntity {
     public void markAsDeleted() {
         this.isDeleted = true;
     }
-
     public void unsetDeleted() {
         this.isDeleted = false;
     }
-
     public void increaseSalesVolume(int amount) {
         this.salesVolume += amount;
     }
-
     public void decreaseSalesVolume(int amount) {
         this.salesVolume = Math.max(0, this.salesVolume - amount);
     }
-
     public void changeStatus(ItemStatus status) {
         this.status = status;
     }

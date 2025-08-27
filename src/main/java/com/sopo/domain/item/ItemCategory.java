@@ -55,6 +55,38 @@ public class ItemCategory extends BaseEntity {
         return category;
     }
 
+    public void rename(String newName) { this.name = newName; }
+
+    public boolean isRoot() { return parent == null; }
+
+    public boolean isAncestorOf(ItemCategory other) {
+        ItemCategory p = other.parent;
+        while (p != null) {
+            if (p == this) return true;
+            p = p.parent;
+        }
+        return false;
+    }
+
+    /**
+     * parent 변경 + depth 재계산, 순환 방지
+     */
+    public void moveTo(ItemCategory newParent) {
+        if (newParent == this || (newParent != null && newParent.isAncestorOf(this))) {
+            throw new IllegalArgumentException("올바르지 않은 요청입니다.");
+        }
+        if (this.parent != null) {
+            this.parent.children.remove(this);
+        }
+        this.parent = newParent;
+        if (newParent != null) {
+            newParent.children.add(this);
+            this.depth = newParent.depth + 1;
+        } else {
+            this.depth = 0;
+        }
+    }
+
     public void addChild(ItemCategory child) {
         this.children.add(child);
         if (child.parent != this) {

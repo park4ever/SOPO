@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 import static jakarta.persistence.FetchType.*;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
@@ -46,6 +48,11 @@ public class ItemOption extends BaseEntity {
 
     public static ItemOption create(ItemColor color, ItemSize size, int stock) {
         return new ItemOption(color, size, stock);
+    }
+
+    public boolean isCombinationOf(ItemColor color, ItemSize size) {
+        return Objects.equals(this.color.getId(), color.getId())
+            && Objects.equals(this.size.getId(), size.getId());
     }
 
     public void assignItem(Item item) {
