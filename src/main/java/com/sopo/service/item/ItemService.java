@@ -3,7 +3,6 @@ package com.sopo.service.item;
 import com.sopo.dto.item.request.*;
 import com.sopo.dto.item.response.ItemDetailResponse;
 import com.sopo.dto.item.response.ItemResponse;
-import org.springframework.data.domain.Page;
 
 public interface ItemService {
 
@@ -22,7 +21,7 @@ public interface ItemService {
     Long addImage(Long itemId, ItemImageCreateRequest request);
     void removeImage(Long itemId, Long imageId);
     void reorderImages(Long itemId, ItemImageReorderRequest request);
-    void setThumbnail(Long itemId, Long imageId); // 단일 썸네일 보장
+    void assignThumbnail(Long itemId, Long imageId); // 단일 썸네일 보장
 
     // Option
     Long addOption(Long itemId, ItemOptionCreateRequest request);

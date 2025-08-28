@@ -19,7 +19,8 @@ public enum ErrorCode {
     COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "색상 정보를 찾을 수 없습니다."),
     SIZE_NOT_FOUND(HttpStatus.NOT_FOUND, "사이즈 정보를 찾을 수 없습니다."),
     DUPLICATE_ITEM_OPTION(HttpStatus.CONFLICT, ""),
-    OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "옵션 정보를 찾을 수 없습니다.");
+    OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "옵션 정보를 찾을 수 없습니다."),
+    FORBIDDEN_OPERATION(HttpStatus.FORBIDDEN, "");
 
     private final HttpStatus status;
     private final String defaultMessage;

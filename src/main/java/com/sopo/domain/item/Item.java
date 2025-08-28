@@ -103,7 +103,7 @@ public class Item extends BaseEntity {
     public int nextImageSortOrder() {
         return images.stream().mapToInt(ItemImage::getSortOrder).max().orElse(0) + 1;
     }
-    public void setThumbnail(Long imageId) {
+    public void assignThumbnail(Long imageId) {
         ItemImage target = findImage(imageId).orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다."));
         images.forEach(ItemImage::unsetThumbnail);
         target.markAsThumbnail();

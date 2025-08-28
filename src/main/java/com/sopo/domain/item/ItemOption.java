@@ -39,6 +39,9 @@ public class ItemOption extends BaseEntity {
     @Column(nullable = false, name = "is_sold_out")
     private boolean isSoldOut;
 
+    @Version
+    private Long version;
+
     private ItemOption(ItemColor color, ItemSize size, int stock) {
         this.color = color;
         this.size = size;

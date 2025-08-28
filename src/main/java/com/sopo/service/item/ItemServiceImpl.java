@@ -12,17 +12,17 @@ import com.sopo.repository.item.ItemColorRepository;
 import com.sopo.repository.item.ItemRepository;
 import com.sopo.repository.item.ItemSizeRepository;
 import com.sopo.repository.member.MemberRepository;
+import com.sopo.security.CurrentUserProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.sopo.domain.item.ItemStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +34,7 @@ public class ItemServiceImpl implements ItemService {
     private final ItemCategoryRepository itemCategoryRepository;
     private final ItemColorRepository itemColorRepository;
     private final ItemSizeRepository itemSizeRepository;
+    private final CurrentUserProvider currentUSer;
 
     @Override
     public Long create(ItemCreateRequest request) {
@@ -57,12 +58,13 @@ public class ItemServiceImpl implements ItemService {
                 category
         );
 
-        return itemRepository.save(item).getId();
+        return itemRepository.saveAndFlush(item).getId();
     }
 
     @Override
     public void update(Long itemId, ItemUpdateRequest request) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
 
         if (request.name() != null) {
             requireNonBlankMax(request.name(), 50, "name");
@@ -89,19 +91,24 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public void changeStatus(Long itemId, ItemStatusChangeRequest request) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
         item.changeStatus(request.status());
     }
 
     @Override
     public void softDelete(Long itemId) {
         Item item = getItemOrThrow(itemId);
+        assertOwnerOrAdmin(item);
         item.markAsDeleted();
+        item.changeStatus(STOPPED);
     }
 
     @Override
     public void restore(Long itemId) {
         Item item = getItemOrThrow(itemId);
+        assertOwnerOrAdmin(item);
         item.unsetDeleted();
+        //TODO : 상품 복구 시, 상태 정책은 별도 API로 다루기
     }
 
     @Override
@@ -144,6 +151,7 @@ public class ItemServiceImpl implements ItemService {
     public void increaseSalesVolume(Long itemId, int amount) {
         if (amount <= 0) return;
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
         item.increaseSalesVolume(amount);
     }
 
@@ -151,12 +159,14 @@ public class ItemServiceImpl implements ItemService {
     public void decreaseSalesVolume(Long itemId, int amount) {
         if (amount <= 0) return;
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
         item.decreaseSalesVolume(amount);
     }
 
     @Override
     public Long addImage(Long itemId, ItemImageCreateRequest request) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
 
         int sortOrder = (request.sortOrder() != null)
                 ? request.sortOrder()
@@ -167,60 +177,85 @@ public class ItemServiceImpl implements ItemService {
         item.addImage(image);
 
         if (request.thumbnail()) {
-            item.setThumbnail(image.getId());
+            item.assignThumbnail(image.getId());
         }
 
+        itemRepository.flush(); //IDENTITY + cascade 환경에서 ID 보장을 위한 flush
         return image.getId();
     }
 
     @Override
     public void removeImage(Long itemId, Long imageId) {
         Item item = getActiveItem(itemId);
-        //존재 검증
-        item.findImage(imageId)
+        assertOwnerOrAdmin(item);
+
+        ItemImage target = item.findImage(imageId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+
+        boolean wasThumbnail = target.isThumbnail();
         item.removeImage(imageId);
+
+        if (wasThumbnail) {
+            item.getImages().stream()
+                    .min(Comparator.comparingInt(ItemImage::getSortOrder))
+                    .ifPresent(next -> item.assignThumbnail(next.getId()));
+        }
     }
 
     @Override
     public void reorderImages(Long itemId, ItemImageReorderRequest request) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
+
         Map<Long, Integer> orders = request.orders().stream()
-                .collect(Collectors.toMap(ItemImageReorderRequest.ImageOrder::imageId,
+                .collect(Collectors.toMap(
+                        ItemImageReorderRequest.ImageOrder::imageId,
                         ItemImageReorderRequest.ImageOrder::sortOrder));
+
+        item.reorderImages(orders);
     }
 
-    //TODO : setThumbnail이라는 이름이 적절한지 의문. item.setThumbnail도 마찬가지.
     @Override
-    public void setThumbnail(Long itemId, Long imageId) {
+    public void assignThumbnail(Long itemId, Long imageId) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
         //내부에서 존재 검증 + 단일화
-        item.setThumbnail(imageId);
+        item.assignThumbnail(imageId);
     }
 
     @Override
     public Long addOption(Long itemId, ItemOptionCreateRequest request) {
-        Item item = getActiveItem(itemId);
+        for (int i = 0; i < 3; i++) {
+            try {
+                Item item = getActiveItem(itemId);
+                assertOwnerOrAdmin(item);
 
-        var color = itemColorRepository.findById(request.colorId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.COLOR_NOT_FOUND));
-        var size = itemSizeRepository.findById(request.sizeId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.SIZE_NOT_FOUND));
+                var color = itemColorRepository.findById(request.colorId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.COLOR_NOT_FOUND));
+                var size = itemSizeRepository.findById(request.sizeId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.SIZE_NOT_FOUND));
 
-        if (item.hasOption(color, size)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_ITEM_OPTION);
+                if (item.hasOption(color, size)) {
+                    throw new BusinessException(ErrorCode.DUPLICATE_ITEM_OPTION);
+                }
+
+                ItemOption option = ItemOption.create(color, size, request.stock());
+                option.assignItem(item);
+                item.addOption(option);
+
+                itemRepository.flush();
+                return option.getId();
+            } catch (ObjectOptimisticLockingFailureException e) {
+                if (i == 2) throw e;
+            }
         }
-
-        ItemOption option = ItemOption.create(color, size, request.stock());
-        option.assignItem(item);
-        item.addOption(option);
-
-        return option.getId();
+        throw new IllegalStateException("예상치 못한 시도입니다. 루프가 종료됩니다.");
     }
 
     @Override
     public void removeOption(Long itemId, Long optionId) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
 
         item.findOption(optionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
@@ -229,25 +264,42 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void decreaseOptionStock(Long itemId, ItemOptionStockChangeRequest request) {
-        Item item = getActiveItem(itemId);
+        for (int i = 0; i < 3; i++) {
+            try {
+                Item item = getActiveItem(itemId);
+                assertOwnerOrAdmin(item);
 
-        ItemOption option = item.findOption(request.optionId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
-        option.decreaseStock(request.quantity());
+                ItemOption option = item.findOption(request.optionId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
+                option.decreaseStock(request.quantity());
+                return;
+            } catch (ObjectOptimisticLockingFailureException e) {
+                if (i == 2) throw e;
+            }
+        }
     }
 
     @Override
     public void increaseOptionStock(Long itemId, ItemOptionStockChangeRequest request) {
-        Item item = getActiveItem(itemId);
+        for (int i = 0; i < 3; i++) {
+            try {
+                Item item = getActiveItem(itemId);
+                assertOwnerOrAdmin(item);
 
-        ItemOption option = item.findOption(request.optionId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
-        option.increaseStock(request.quantity());
+                ItemOption option = item.findOption(request.optionId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
+                option.increaseStock(request.quantity());
+                return;
+            } catch (ObjectOptimisticLockingFailureException e) {
+                if (i == 2) throw e;
+            }
+        }
     }
 
     @Override
     public void markOptionSoldOut(Long itemId, Long optionId) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
 
         ItemOption option = item.findOption(optionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
@@ -257,6 +309,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public void markOptionInStock(Long itemId, Long optionId) {
         Item item = getActiveItem(itemId);
+        assertOwnerOrAdmin(item);
 
         ItemOption option = item.findOption(optionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.OPTION_NOT_FOUND));
@@ -274,6 +327,15 @@ public class ItemServiceImpl implements ItemService {
             throw new BusinessException(ErrorCode.ITEM_DELETED);
         }
         return item;
+    }
+
+    private void assertOwnerOrAdmin(Item item) {
+        if (currentUSer.hasRole("ROLE_ADMIN")) return;
+        Long me = currentUSer.currentUserId();
+        Long sellerId = (item.getSeller() != null) ? item.getSeller().getId() : null;
+        if (!Objects.equals(me, sellerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_OPERATION);
+        }
     }
 
     private boolean notDeleted(Item item) {
@@ -336,7 +398,6 @@ public class ItemServiceImpl implements ItemService {
 
     private void requireNonBlankMax(String value, int max, String field) {
         if (value == null || value.isBlank() || value.length() > max) {
-            // 필요 시 INVALID_PARAM 대신 세부 코드 분리(예: INVALID_NAME, INVALID_BRAND 등)
             throw new BusinessException(ErrorCode.INVALID_PARAM);
         }
     }
