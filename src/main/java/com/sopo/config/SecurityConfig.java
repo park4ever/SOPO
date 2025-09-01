@@ -55,7 +55,7 @@ public class SecurityConfig {
                         // 인증 필요
                         .requestMatchers("/members/**", "/api/members/me/**", "/api/addresses/**").authenticated()
 
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/seller/**").hasAnyRole("SELLER", "ADMIN")
 
                         .anyRequest().authenticated()

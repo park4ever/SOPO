@@ -20,8 +20,14 @@ public class SecurityCurrentUserProvider implements CurrentUserProvider {
         Object principal = auth.getPrincipal();
 
         if (principal instanceof CustomUserDetails cud) {
-            return cud.getId();
+            Long id = cud.getId();
+            if (id == null) {
+                throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+            }
+            return id;
         }
+
+        throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
     }
 
     @Override
