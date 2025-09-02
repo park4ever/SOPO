@@ -17,9 +17,9 @@ public interface ItemCategoryService {
 
     void move(Long categoryId, ItemCategoryMoveRequest request);
 
-    void softDelete(Long categoryId);
+    void softDelete(Long categoryId, boolean cascade);
 
-    void restore(Long categoryId);
+    void restore(Long categoryId, boolean cascade);
 
     ItemCategoryDetailResponse getById(Long categoryId);
 

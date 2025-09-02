@@ -40,14 +40,16 @@ public class AdminItemCategoryApiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> softDelete(@PathVariable("id") Long id) {
-        categoryService.softDelete(id);
+    public ResponseEntity<Void> softDelete(@PathVariable("id") Long id,
+                                           @RequestParam(name = "cascade", defaultValue = "false") boolean cascade) {
+        categoryService.softDelete(id, cascade);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/restore")
-    public ResponseEntity<Void> restore(@PathVariable("id") Long id) {
-        categoryService.restore(id);
+    public ResponseEntity<Void> restore(@PathVariable("id") Long id,
+                                        @RequestParam(name = "cascade", defaultValue = "false") boolean cascade) {
+        categoryService.restore(id, cascade);
         return ResponseEntity.noContent().build();
     }
 }

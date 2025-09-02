@@ -10,7 +10,7 @@ import com.sopo.dto.item.response.ItemCategoryTreeNode;
 import com.sopo.exception.BusinessException;
 import com.sopo.exception.ErrorCode;
 import com.sopo.repository.item.ItemCategoryRepository;
-import com.sopo.security.CurrentUserProvider;
+import com.sopo.security.aop.AdminOnly;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,12 +23,10 @@ import java.util.*;
 public class ItemCategoryServiceImpl implements ItemCategoryService {
 
     private final ItemCategoryRepository categoryRepository;
-    private final CurrentUserProvider currentUser;
 
     @Override
+    @AdminOnly
     public Long create(ItemCategoryCreateRequest request) {
-        assertAdmin();
-
         ItemCategory parent = null;
         if (request.parentId() != null) {
             parent = categoryRepository.findById(request.parentId())
@@ -49,9 +47,8 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
     }
 
     @Override
+    @AdminOnly
     public void rename(Long categoryId, ItemCategoryRenameRequest request) {
-        assertAdmin();
-
         ItemCategory category = getActive(categoryId);
         Long parentId = (category.getParent() != null) ? category.getParent().getId() : null;
 
@@ -67,9 +64,8 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
     }
 
     @Override
+    @AdminOnly
     public void move(Long categoryId, ItemCategoryMoveRequest request) {
-        assertAdmin();
-
         ItemCategory target = getActive(categoryId);
         ItemCategory newParent = null;
 
@@ -98,19 +94,21 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
     }
 
     @Override
-    public void softDelete(Long categoryId) {
-        assertAdmin();
-
+    @AdminOnly
+    public void softDelete(Long categoryId, boolean cascade) {
         ItemCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        category.markAsDeleted();
+        if (cascade) {
+            category.markDeletedCascade();
+        } else {
+            category.markDeletedSelf();
+        }
     }
 
     @Override
-    public void restore(Long categoryId) {
-        assertAdmin();
-
+    @AdminOnly
+    public void restore(Long categoryId, boolean cascade) {
         ItemCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -119,7 +117,11 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
             throw new BusinessException(ErrorCode.CATEGORY_DELETED_PARENT);
         }
 
-        category.unsetDeleted();
+        if (cascade) {
+            category.restoreCascade();
+        } else {
+            category.restoreSelf();
+        }
     }
 
     @Override
@@ -170,17 +172,12 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemCategoryPathNode> getPath(Long categoryId) {
-        ItemCategory c = categoryRepository.findById(categoryId)
+        ItemCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        LinkedList<ItemCategoryPathNode> path = new LinkedList<>();
-        ItemCategory cur = c;
-        while (cur != null) {
-            path.addFirst(new ItemCategoryPathNode(cur.getId(), cur.getName()));
-            cur = cur.getParent();
-        }
-
-        return path;
+        return category.getPathFromRoot().stream()
+                .map(c -> new ItemCategoryPathNode(c.getId(), c.getName()))
+                .toList();
     }
 
     private ItemCategory getByIdOrThrow(Long id) {
@@ -196,20 +193,10 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
         return category;
     }
 
-    private Long idOf(ItemCategory category) {
-        return (category == null) ? null : category.getId();
-    }
-
     private ItemCategoryDetailResponse toDetail(ItemCategory category) {
         Long parentId = (category.getParent() != null) ? category.getParent().getId() : null;
         return new ItemCategoryDetailResponse(
                 category.getId(), category.getName(), parentId, category.getDepth(), category.isDeleted(), category.getChildren().size()
         );
-    }
-
-    private void assertAdmin() {
-        if (!currentUser.hasRole("ROLE_ADMIN")) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_OPERATION);
-        }
     }
 }

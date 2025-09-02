@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import static jakarta.persistence.CascadeType.*;
@@ -73,11 +74,13 @@ public class ItemCategory extends BaseEntity {
      */
     public void moveTo(ItemCategory newParent) {
         if (newParent == this || (newParent != null && newParent.isAncestorOf(this))) {
-            throw new IllegalArgumentException("올바르지 않은 요청입니다.");
+            throw new IllegalArgumentException("순환 참조는 허용되지 않습니다.");
         }
+
         if (this.parent != null) {
             this.parent.children.remove(this);
         }
+
         this.parent = newParent;
         if (newParent != null) {
             newParent.children.add(this);
@@ -85,6 +88,21 @@ public class ItemCategory extends BaseEntity {
         } else {
             this.depth = 0;
         }
+
+        // 자식들까지 depth 재계산
+        for (ItemCategory child : this.children) {
+            child.updateDepthRecursively(this.depth + 1);
+        }
+    }
+
+    public List<ItemCategory> getPathFromRoot() {
+        LinkedList<ItemCategory> path = new LinkedList<>();
+        ItemCategory current = this;
+        while (current != null) {
+            path.addFirst(current); // root → this
+            current = current.parent;
+        }
+        return path;
     }
 
     public void addChild(ItemCategory child) {
@@ -94,11 +112,46 @@ public class ItemCategory extends BaseEntity {
         }
     }
 
-    public void markAsDeleted() {
+    /** 자신만 삭제 (하위는 그대로 유지) */
+    public void markDeletedSelf() {
         this.isDeleted = true;
     }
 
-    public void unsetDeleted() {
+    /** 자신 및 하위 전체 삭제 */
+    public void markDeletedCascade() {
+        this.isDeleted = true;
+        for (ItemCategory child : this.children) {
+            if (!child.isDeleted) {
+                child.markDeletedCascade();
+            }
+        }
+    }
+
+    /** 자신만 복구 (부모가 삭제 상태면 복구 금지) */
+    public void restoreSelf() {
+        if (this.parent != null && this.parent.isDeleted) {
+            throw new IllegalStateException("삭제된 부모 밑에서는 복원이 불가능합니다.");
+        }
         this.isDeleted = false;
+    }
+
+    /** 자신 및 하위 전체 복구 (부모가 삭제 상태면 복구 금지) */
+    public void restoreCascade() {
+        if (this.parent != null && this.parent.isDeleted) {
+            throw new IllegalStateException("삭제된 부모 밑에서는 복원이 불가능합니다.");
+        }
+        this.isDeleted = false;
+        for (ItemCategory child : this.children) {
+            if (child.isDeleted) {
+                child.restoreCascade();
+            }
+        }
+    }
+
+    private void updateDepthRecursively(int newDepth) {
+        this.depth = newDepth;
+        for (ItemCategory child : this.children) {
+            child.updateDepthRecursively(newDepth + 1);
+        }
     }
 }
