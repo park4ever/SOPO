@@ -1,11 +1,9 @@
 package com.sopo.service.cart;
 
+import com.sopo.common.money.Money;
 import com.sopo.domain.cart.Cart;
 import com.sopo.domain.cart.CartItem;
-import com.sopo.domain.item.Item;
-import com.sopo.domain.item.ItemImage;
-import com.sopo.domain.item.ItemOption;
-import com.sopo.domain.item.ItemStatus;
+import com.sopo.domain.item.*;
 import com.sopo.dto.cart.request.CartItemAddRequest;
 import com.sopo.dto.cart.request.CartItemUpdateQuantityRequest;
 import com.sopo.dto.cart.response.CartItemResponse;
@@ -22,9 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 
@@ -47,7 +43,6 @@ public class CartServiceImpl implements CartService {
         List<CartItem> items = cartItemRepository.findWithItemGraphByCartIdOnlyThumbnail(cart.getId());
 
         List<CartItemResponse> lines = items.stream()
-                .sorted(Comparator.comparing(CartItem::getId))
                 .map(this::toResponse)
                 .collect(toList());
 
@@ -77,9 +72,15 @@ public class CartServiceImpl implements CartService {
         //장바구니가 없다면 첫 담기 시 생성
         Cart cart = cartRepository.findByMemberId(memberId)
                 .orElseGet(() -> {
-                    Cart created = Cart.create(memberRepository.getReferenceById(memberId));
-                    return cartRepository.save(created);
+                    try {
+                        return cartRepository.save(Cart.create(memberRepository.getReferenceById(memberId)));
+                    } catch (DataIntegrityViolationException dup) {
+                        // 동시에 다른 트랜잭션이 먼저 만들었음 → 재조회로 수습
+                        return cartRepository.findByMemberId(memberId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
+                    }
                 });
+
 
         //옵션 및 상품 상태 검증
         ItemOption option = itemOptionRepository.findById(request.itemOptionId())
@@ -119,14 +120,8 @@ public class CartServiceImpl implements CartService {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
 
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
-        CartItem ci = cartItemRepository.findById(request.cartItemId())
+        CartItem ci = cartItemRepository.findOwnedWithItem(request.cartItemId(), memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
-
-        if (!Objects.equals(ci.getCart().getId(), cart.getId())) {
-            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
-        }
 
         ItemOption option = ci.getItemOption();
         Item item = option.getItem();
@@ -136,14 +131,8 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void removeItem(Long memberId, Long cartItemId) {
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
-        CartItem ci = cartItemRepository.findById(cartItemId)
+        CartItem ci = cartItemRepository.findOwnedWithItem(cartItemId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
-
-        if (!Objects.equals(ci.getCart().getId(), cart.getId())) {
-            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
-        }
         cartItemRepository.delete(ci);
     }
 
@@ -151,8 +140,7 @@ public class CartServiceImpl implements CartService {
     public void clear(Long memberId) {
         Cart cart = cartRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
-        List<CartItem> all = cartItemRepository.findAllByCartId(cart.getId());
-        cartItemRepository.deleteAllInBatch(all);
+        cartItemRepository.deleteAllByCartId(cart.getId());
     }
 
     private void validatePurchasable(Item item, ItemOption option, int qty) {
@@ -171,12 +159,8 @@ public class CartServiceImpl implements CartService {
         ItemOption opt = ci.getItemOption();
         Item item = opt.getItem();
 
-        boolean available = !item.isDeleted()
-                && item.getStatus() == ItemStatus.ON_SALE
-                && !opt.isSoldOut();
-
-        BigDecimal unitPrice = item.getPrice();
-        BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(ci.getQuantity()));
+        Money unit = Money.of(item.getPrice());
+        Money line = unit.times(ci.getQuantity());
 
         String thumbnailUrl = item.getImages().stream()
                 .filter(ItemImage::isThumbnail)
@@ -184,6 +168,19 @@ public class CartServiceImpl implements CartService {
                 .map(ItemImage::getImageUrl)
                 .orElse(null);
 
+        UnavailableReason reason = null;
+
+        if (item.isDeleted()) {
+            reason = UnavailableReason.ITEM_DELETED;
+        } else if (item.getStatus() != ItemStatus.ON_SALE) {
+            reason = UnavailableReason.ITEM_NOT_ON_SALE;
+        } else if (opt.isSoldOut()) {
+            reason = UnavailableReason.OPTION_SOLD_OUT;
+        } else if (opt.getStock() < ci.getQuantity()) {
+            reason = UnavailableReason.QUANTITY_EXCEEDS_STOCK;
+        }
+
+        boolean available = (reason == null);
         Integer maxPurchasable = available ? opt.getStock() : null;
 
         return new CartItemResponse(
@@ -194,12 +191,13 @@ public class CartServiceImpl implements CartService {
                 opt.getId(),
                 opt.getColor().getName(),
                 opt.getSize().getName(),
-                unitPrice,
+                unit.asBigDecimal(),
                 ci.getQuantity(),
-                lineTotal,
+                line.asBigDecimal(),
                 available,
                 maxPurchasable,
-                thumbnailUrl
+                thumbnailUrl,
+                reason
         );
     }
 }

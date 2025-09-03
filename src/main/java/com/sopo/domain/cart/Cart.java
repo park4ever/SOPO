@@ -25,11 +25,6 @@ import static lombok.AccessLevel.*;
 @NoArgsConstructor(access = PROTECTED)
 public class Cart extends BaseEntity {
 
-    /* TODO [서비스 고려사항]
-     - Cart 생성 시점: 회원가입 시 자동 생성? vs 첫 담기 시 생성?
-     → 현재는 create(Member)로 수동 생성. 서비스에서 결정 필요 */
-
-
     @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "cart_id")
     private Long id;

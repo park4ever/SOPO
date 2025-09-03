@@ -1,5 +1,6 @@
 package com.sopo.service.item;
 
+import com.sopo.common.money.Money;
 import com.sopo.domain.item.*;
 import com.sopo.domain.member.Member;
 import com.sopo.dto.item.request.*;
@@ -19,6 +20,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +54,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = Item.create(
                 request.name(),
                 normalizeNullable(request.description()),
-                request.price(),
+                normalizePrice(request.price()),
                 request.brand(),
                 seller,
                 category
@@ -75,7 +77,7 @@ public class ItemServiceImpl implements ItemService {
         }
         if (request.price() != null) {
             requirePositive(request.price(), "price");
-            item.changePrice(request.price());
+            item.changePrice(normalizePrice(request.price()));
         }
         if (request.brand() != null) {
             requireNonBlankMax(request.brand(), 30, "brand");
@@ -389,6 +391,10 @@ public class ItemServiceImpl implements ItemService {
         return (s == null || s.isBlank()) ? null : s;
     }
 
+    private BigDecimal normalizePrice(BigDecimal price) {
+        return Money.of(price).asBigDecimal();
+    }
+
     private void validateCreate(ItemCreateRequest req) {
         requireNonBlankMax(req.name(), 50, "name");
         requireNonBlankMax(req.brand(), 30, "brand");
@@ -403,7 +409,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void requirePositive(java.math.BigDecimal price, String field) {
-        if (price == null || price.signum() <= 0) {
+        try {
+            Money m = Money.of(price);
+            if (m.asBigDecimal().signum() <= 0) {
+                throw new BusinessException(ErrorCode.INVALID_PARAM);
+            }
+        } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_PARAM);
         }
     }
