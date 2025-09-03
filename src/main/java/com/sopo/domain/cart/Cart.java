@@ -16,7 +16,12 @@ import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
-@Table(name = "cart")
+@Table(
+        name = "cart",
+        uniqueConstraints = {
+            @UniqueConstraint(name = "uk_cart_member", columnNames = "member_id")
+        }
+)
 @NoArgsConstructor(access = PROTECTED)
 public class Cart extends BaseEntity {
 
@@ -29,8 +34,8 @@ public class Cart extends BaseEntity {
     @Column(name = "cart_id")
     private Long id;
 
-    @ManyToOne(fetch = LAZY, optional = false)
-    @JoinColumn(name = "member_id")
+    @OneToOne(fetch = LAZY, optional = false)
+    @JoinColumn(name = "member_id", unique = true, nullable = false)
     private Member member;
 
     @OneToMany(mappedBy = "cart", cascade = ALL, orphanRemoval = true)

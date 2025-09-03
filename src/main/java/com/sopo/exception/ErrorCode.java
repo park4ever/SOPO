@@ -7,6 +7,7 @@ public enum ErrorCode {
     // -------------------- 400 Bad Request: 요청 형식/값 오류 --------------------
     INVALID_PARAM(HttpStatus.BAD_REQUEST, "올바르지 않은 요청입니다."),
     INVALID_SORT(HttpStatus.BAD_REQUEST, "지원하지 않는 정렬 조건입니다."),
+    INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "유효하지 않은 수량입니다."),
 
     // -------------------- 401 Unauthorized: 미인증/인증 실패 --------------------
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
@@ -16,6 +17,7 @@ public enum ErrorCode {
     FORBIDDEN_OPERATION(HttpStatus.FORBIDDEN, "요청한 작업에 대한 권한이 없습니다."),
     MEMBER_DISABLED(HttpStatus.FORBIDDEN, "비활성화된 회원입니다."),
     ITEM_DELETED(HttpStatus.FORBIDDEN, "삭제된 상품은 사용할 수 없습니다."),
+    ITEM_NOT_ON_SALE(HttpStatus.FORBIDDEN, "판매 중이 아닌 상품입니다."),
 
     // -------------------- 404 Not Found: 리소스 없음 --------------------
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
@@ -26,6 +28,8 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리 정보를 찾을 수 없습니다."),
     COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "색상 정보를 찾을 수 없습니다."),
     SIZE_NOT_FOUND(HttpStatus.NOT_FOUND, "사이즈 정보를 찾을 수 없습니다."),
+    CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니를 찾을 수 없습니다."),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니 항목을 찾을 수 없습니다."),
 
     // -------------------- 409 Conflict: 상태 충돌/중복 --------------------
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
@@ -33,7 +37,10 @@ public enum ErrorCode {
     CATEGORY_DUPLICATE_NAME(HttpStatus.CONFLICT, "동일 부모 내에서 이미 존재하는 이름입니다."),
     CATEGORY_CYCLE(HttpStatus.CONFLICT, "카테고리를 자기 하위로 이동할 수 없습니다."),
     CATEGORY_DELETED_PARENT(HttpStatus.CONFLICT, "삭제된 부모 카테고리에는 추가/이동할 수 없습니다."),
-    CATEGORY_MOVE_TO_DELETED_PARENT(HttpStatus.CONFLICT, "삭제된 부모 카테고리로는 이동할 수 없습니다.");
+    CATEGORY_MOVE_TO_DELETED_PARENT(HttpStatus.CONFLICT, "삭제된 부모 카테고리로는 이동할 수 없습니다."),
+    OPTION_SOLD_OUT(HttpStatus.CONFLICT, "품절된 옵션입니다."),
+    QUANTITY_EXCEEDS_STOCK(HttpStatus.CONFLICT, "재고 수량을 초과했습니다."),
+    DUPLICATED_CART_ITEM(HttpStatus.CONFLICT, "동일 옵션이 이미 장바구니에 존재합니다.");
 
     private final HttpStatus status;
     private final String defaultMessage;

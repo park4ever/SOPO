@@ -12,7 +12,12 @@ import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
-@Table(name = "cart_item")
+@Table(
+        name = "cart_item",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_cart_item_option", columnNames = {"cart_id", "item_option_id"})
+        }
+)
 @NoArgsConstructor(access = PROTECTED)
 public class CartItem extends BaseEntity {
 
@@ -26,11 +31,11 @@ public class CartItem extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = LAZY, optional = false)
-    @JoinColumn(name = "cart_id")
+    @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
     @ManyToOne(fetch = LAZY, optional = false)
-    @JoinColumn(name = "item_option_id")
+    @JoinColumn(name = "item_option_id", nullable = false)
     private ItemOption itemOption;
 
     @Column(nullable = false)
