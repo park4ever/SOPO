@@ -5,5 +5,5 @@ import jakarta.validation.constraints.Positive;
 
 public record CartItemUpdateQuantityRequest(
         @NotNull Long cartItemId,
-        @NotNull @Positive int quantity
+        @NotNull @Positive Integer quantity
 ) {}

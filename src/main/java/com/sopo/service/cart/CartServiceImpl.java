@@ -65,7 +65,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Long addItem(Long memberId, CartItemAddRequest request) {
-        if (request.quantity() <= 0) {
+        if (request.quantity() == null || request.quantity() <= 0) {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
 
@@ -116,7 +116,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void updateQuantity(Long memberId, CartItemUpdateQuantityRequest request) {
-        if (request.quantity() <= 0) {
+        if (request.quantity() == null || request.quantity() <= 0) {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
 
