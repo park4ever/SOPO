@@ -6,6 +6,7 @@ import com.sopo.dto.cart.request.CartItemUpdateQuantityRequest;
 import com.sopo.dto.cart.response.CartSummaryResponse;
 import com.sopo.exception.BusinessException;
 import com.sopo.exception.ErrorCode;
+import com.sopo.security.session.MemberSession;
 import com.sopo.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,19 +23,19 @@ public class CartApiController {
     private final CartService cartService;
 
     @GetMapping
-    public CartSummaryResponse get(@LoginMember Long memberId) {
-        return cartService.getMyCart(memberId);
+    public CartSummaryResponse get(@LoginMember MemberSession session) {
+        return cartService.getMyCart(session.id());
     }
 
     @PostMapping("/items")
-    public ResponseEntity<Long> add(@LoginMember Long memberId,
+    public ResponseEntity<Long> add(@LoginMember MemberSession session,
                                     @RequestBody @Valid CartItemAddRequest request) {
-        Long cartItemId = cartService.addItem(memberId, request);
+        Long cartItemId = cartService.addItem(session.id(), request);
         return ResponseEntity.ok(cartItemId);
     }
 
     @PatchMapping("/items/{cartItemId}")
-    public ResponseEntity<Void> update(@LoginMember Long memberId,
+    public ResponseEntity<Void> update(@LoginMember MemberSession session,
                                        @PathVariable("cartItemId") Long cartItemId,
                                        @RequestBody @Valid CartItemUpdateQuantityRequest request) {
         //요청 본문과 경로변수 정합성 체크(의도 불일치 방지)
@@ -42,20 +43,20 @@ public class CartApiController {
             throw new BusinessException(ErrorCode.INVALID_PARAM);
         }
 
-        cartService.updateQuantity(memberId, request);
+        cartService.updateQuantity(session.id(), request);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/items/{cartItemId}")
-    public ResponseEntity<Void> remove(@LoginMember Long memberId,
+    public ResponseEntity<Void> remove(@LoginMember MemberSession session,
                                        @PathVariable("cartItemId") Long cartItemId) {
-        cartService.removeItem(memberId, cartItemId);
+        cartService.removeItem(session.id(), cartItemId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> clear(@LoginMember Long memberId) {
-        cartService.clear(memberId);
+    public ResponseEntity<Void> clear(@LoginMember MemberSession session) {
+        cartService.clear(session.id());
         return ResponseEntity.noContent().build();
     }
 }

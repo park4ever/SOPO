@@ -4,6 +4,7 @@ import com.sopo.config.auth.LoginMember;
 import com.sopo.dto.cart.request.CartItemAddRequest;
 import com.sopo.dto.cart.request.CartItemUpdateQuantityRequest;
 import com.sopo.dto.cart.response.CartSummaryResponse;
+import com.sopo.security.session.MemberSession;
 import com.sopo.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
-    public String view(@LoginMember Long memberId, Model model) {
-        CartSummaryResponse cart = cartService.getMyCart(memberId);
+    public String view(@LoginMember MemberSession session, Model model) {
+        CartSummaryResponse cart = cartService.getMyCart(session.id());
         model.addAttribute("cart", cart);
 
         //신규 담기 폼 초기값(뷰에서 th:object 사용)
@@ -31,7 +32,7 @@ public class CartController {
     }
 
     @PostMapping("/items")
-    public String add(@LoginMember Long memberId,
+    public String add(@LoginMember MemberSession session,
                       @ModelAttribute("addForm") @Valid CartItemAddRequest form,
                       BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
@@ -40,13 +41,13 @@ public class CartController {
         }
 
         var req = new CartItemAddRequest(form.itemId(), form.itemOptionId(), form.quantity());
-        Long cartItemId = cartService.addItem(memberId, req);
+        Long cartItemId = cartService.addItem(session.id(), req);
         ra.addFlashAttribute("message", "장바구니에 상품을 담았습니다. (#" + cartItemId + ")");
         return "redirect:/cart";
     }
 
     @PostMapping("/items/{cartItemId}/quantity")
-    public String updateQuantity(@LoginMember Long memberId,
+    public String updateQuantity(@LoginMember MemberSession session,
                                  @PathVariable("cartItemId") Long cartItemId,
                                  @RequestParam("quantity") Integer quantity,
                                  RedirectAttributes ra) {
@@ -56,23 +57,23 @@ public class CartController {
         }
 
         var req = new CartItemUpdateQuantityRequest(cartItemId, quantity);
-        cartService.updateQuantity(memberId, req);
+        cartService.updateQuantity(session.id(), req);
         ra.addFlashAttribute("message", "수량이 변경되었습니다.");
         return "redirect:/cart";
     }
 
     @PostMapping("/items/{cartItemId}/remove")
-    public String remove(@LoginMember Long memberId,
+    public String remove(@LoginMember MemberSession session,
                          @PathVariable Long cartItemId,
                          RedirectAttributes ra) {
-        cartService.removeItem(memberId, cartItemId);
+        cartService.removeItem(session.id(), cartItemId);
         ra.addFlashAttribute("message", "장바구니 항목을 삭제했습니다.");
         return "redirect:/cart";
     }
 
     @PostMapping("/clear")
-    public String clear(@LoginMember Long memberId, RedirectAttributes ra) {
-        cartService.clear(memberId);
+    public String clear(@LoginMember MemberSession session, RedirectAttributes ra) {
+        cartService.clear(session.id());
         ra.addFlashAttribute("message", "장바구니를 비웠습니다.");
         return "redirect:/cart";
     }
