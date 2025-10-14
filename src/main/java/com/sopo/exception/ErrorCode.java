@@ -47,7 +47,8 @@ public enum ErrorCode {
     QUANTITY_EXCEEDS_STOCK(HttpStatus.CONFLICT, "재고 수량을 초과했습니다."),
     DUPLICATED_CART_ITEM(HttpStatus.CONFLICT, "동일 옵션이 이미 장바구니에 존재합니다."),
     INVALID_ORDER_STATUS_CHANGE(HttpStatus.CONFLICT, "현재 상태에서는 요청한 상태로 변경할 수 없습니다."),
-    ORDER_ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 주문입니다.");
+    ORDER_ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 주문입니다."),
+    ORDER_LINE_IMMUTABLE_AFTER_ORDERED(HttpStatus.CONFLICT, "주문 확정 이후에는 주문 항목을 변경할 수 없습니다.");
 
     private final HttpStatus status;
     private final String defaultMessage;

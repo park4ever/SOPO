@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /** 통화 연산 표준화: 스케일/반올림 강제 (KRW 기준: 소수점 0) */
 public record Money(BigDecimal amount) implements Comparable<Money> {
-    public static final int SCALE = 0; // KRW=0, USD 등은 2로 변경 가능
+    public static final int SCALE = 2;
     public static final RoundingMode RM = RoundingMode.HALF_UP;
     public static final Money ZERO = new Money(BigDecimal.ZERO);
 
