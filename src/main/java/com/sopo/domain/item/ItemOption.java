@@ -1,10 +1,13 @@
 package com.sopo.domain.item;
 
 import com.sopo.domain.common.BaseEntity;
+import com.sopo.exception.BusinessException;
+import com.sopo.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 import static jakarta.persistence.FetchType.*;
@@ -51,6 +54,13 @@ public class ItemOption extends BaseEntity {
 
     public static ItemOption create(ItemColor color, ItemSize size, int stock) {
         return new ItemOption(color, size, stock);
+    }
+
+    public BigDecimal snapshotUnitPrice() {
+        if (item == null || item.getPrice() == null) {
+            throw new BusinessException(ErrorCode.ITEM_NOT_FOUND);
+        }
+        return item.getPrice();
     }
 
     public boolean isCombinationOf(ItemColor color, ItemSize size) {

@@ -8,5 +8,22 @@ public enum OrderStatus {
     DELIVERED,    // 배송 완료
     CANCELED,     // 주문 취소
     RETURNED,     // 반품
-    REFUNDED      // 환불
+    REFUNDED;      // 환불
+
+    public boolean canTransitionTo(OrderStatus to) {
+        if (this == to) return true;
+        return switch (this) {
+            case ORDERED -> (to == PAID || to == CANCELED);
+            case PAID -> (to == PREPARING || to == CANCELED);
+            case PREPARING -> (to == SHIPPED || to == CANCELED);
+            case SHIPPED -> (to == DELIVERED);
+            case DELIVERED -> (to == RETURNED);
+            case RETURNED -> (to == REFUNDED);
+            case CANCELED, REFUNDED -> false;
+        };
+    }
+
+    public boolean isUserCancelable() {
+        return this == ORDERED || this == PAID || this == PREPARING;
+    }
 }

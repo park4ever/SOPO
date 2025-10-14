@@ -1,5 +1,6 @@
 package com.sopo.domain.order;
 
+import com.sopo.common.money.Money;
 import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.member.Member;
 import jakarta.persistence.*;
@@ -43,6 +44,9 @@ public class Order extends BaseEntity {
     @Column(nullable = false, name = "is_deleted")
     private boolean isDeleted;
 
+    @Version
+    private Long version;
+
     private Order(Member member, List<OrderItem> orderItems) {
         this.member = member;
         this.status = OrderStatus.ORDERED;
@@ -56,9 +60,10 @@ public class Order extends BaseEntity {
     }
 
     private BigDecimal calculateTotalPrice(List<OrderItem> orderItems) {
-        return orderItems.stream()
-                .map(OrderItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Money sum = orderItems.stream()
+                .map(oi -> Money.of(oi.getTotalPrice()))
+                .reduce(Money.ZERO, Money::plus);
+        return sum.asBigDecimal();
     }
 
     public void addOrderItem(OrderItem orderItem) {

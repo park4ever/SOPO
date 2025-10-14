@@ -1,7 +1,10 @@
 package com.sopo.domain.order;
 
+import com.sopo.common.money.Money;
 import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.item.ItemOption;
+import com.sopo.exception.BusinessException;
+import com.sopo.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,40 +45,27 @@ public class OrderItem extends BaseEntity {
     private OrderItem(ItemOption itemOption, int quantity) {
         this.itemOption = itemOption;
         this.quantity = quantity;
-        this.price = itemOption.getItem().getPrice(); //주문 시점 가격 가져오기
-        this.totalPrice = calculateTotalPrice();
+
+        //단가 스냅샷 Money로 계산
+        Money unit = Money.of(itemOption.snapshotUnitPrice());
+        Money line = unit.times(quantity);
+
+        //DB 저장은 BigDecimal
+        this.price = unit.asBigDecimal();
+        this.totalPrice = line.asBigDecimal();
     }
 
     public static OrderItem create(ItemOption itemOption, int quantity) {
+        if (quantity < 1) throw new IllegalArgumentException("최소 수량은 1개 이상이어야 합니다.");
         return new OrderItem(itemOption, quantity);
     }
 
     private BigDecimal calculateTotalPrice() {
-        return price.multiply(BigDecimal.valueOf(quantity));
+        Money unit = Money.of(this.price);
+        return unit.times(this.quantity).asBigDecimal();
     }
 
     public void assignOrder(Order order) {
         this.order = order;
-    }
-
-    public void increaseQuantity(int amount) {
-        this.quantity += amount;
-        this.totalPrice = calculateTotalPrice();
-    }
-
-    public void decreaseQuantity(int amount) {
-        if (this.quantity - amount < 1) {
-            throw new IllegalArgumentException("최소 수량은 1개 이상이어야 합니다.");
-        }
-        this.quantity -= amount;
-        this.totalPrice = calculateTotalPrice();
-    }
-
-    public void updateQuantity(int quantity) {
-        if (quantity < 1) {
-            throw new IllegalArgumentException("최소 수량은 1개 이상이어야 합니다.");
-        }
-        this.quantity = quantity;
-        this.totalPrice = calculateTotalPrice();
     }
 }
