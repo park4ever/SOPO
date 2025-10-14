@@ -9,6 +9,8 @@ import org.aspectj.lang.annotation.Before;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+
 @Aspect
 @RequiredArgsConstructor
 @Order(0)
@@ -17,10 +19,9 @@ public class AdminOnlyAspect {
 
     private final CurrentUserProvider currentUser;
 
-    @Before("@annotation(com.sopo.security.aop.AdminOnly) || @within(com.sopo.security.aop.AdminOnly)")
-    public void checkAdminRole() {
-        if (!currentUser.hasRole("ROLE_ADMIN")) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_OPERATION);
-        }
+    @Before("@annotation(adminOnly) || @within(adminOnly)")
+    public void checkAdminRole(AdminOnly adminOnly) {
+        boolean ok = Arrays.stream(adminOnly.value()).anyMatch(currentUser::hasRole);
+        if (!ok) throw new BusinessException(ErrorCode.FORBIDDEN_OPERATION);
     }
 }
