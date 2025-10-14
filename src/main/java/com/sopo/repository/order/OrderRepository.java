@@ -27,7 +27,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, OrderReposi
             "orderItems.itemOption",
             "orderItems.itemOption.item",
             "orderItems.itemOption.color",
-            "orderItems.itemOption.size"
+            "orderItems.itemOption.size",
+            "member"
     })
     Optional<Order> findWithDetailsById(Long orderId);
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ItemOptionRepository extends JpaRepository<ItemOption, Long> {
@@ -15,4 +16,15 @@ public interface ItemOptionRepository extends JpaRepository<ItemOption, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select io from ItemOption io join fetch io.item where io.id = :id")
     Optional<ItemOption> findByIdForUpdate(@Param("id") Long id);
+
+    // 주문 생성/취소 시 여러 옵션을 한 번에 락 (왕복/데드락 감소)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+       select io
+       from ItemOption io
+       join fetch io.item
+       where io.id in :ids
+       order by io.id
+       """)
+    List<ItemOption> findAllByIdForUpdate(@Param("ids") List<Long> ids);
 }
