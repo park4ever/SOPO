@@ -67,6 +67,6 @@ public class Payment extends BaseEntity {
     }
 
     public void cancel() {
-        this.status = CANCELLED;
+        this.status = CANCELED;
     }
 }

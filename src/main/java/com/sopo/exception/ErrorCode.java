@@ -9,6 +9,11 @@ public enum ErrorCode {
     INVALID_SORT(HttpStatus.BAD_REQUEST, "지원하지 않는 정렬 조건입니다."),
     INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "유효하지 않은 수량입니다."),
     ORDER_EMPTY_LINES(HttpStatus.BAD_REQUEST, "주문 항목이 비어 있습니다."),
+    COUPON_INVALID_AMOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 금액(0 이하)입니다."),
+    COUPON_INVALID_PERCENTAGE(HttpStatus.BAD_REQUEST, "유효하지 않은 정율(1~100)입니다."),
+    COUPON_INVALID_PERIOD(HttpStatus.BAD_REQUEST, "쿠폰 사용 가능 기간이 올바르지 않습니다."),
+    COUPON_TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "쿠폰 타입과 값 조합이 올바르지 않습니다."),
+    COUPON_MAX_DISCOUNT_REQUIRED(HttpStatus.BAD_REQUEST, "정율 쿠폰의 최대 할인액이 필요합니다."),
 
     // -------------------- 401 Unauthorized: 미인증/인증 실패 --------------------
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
@@ -21,6 +26,13 @@ public enum ErrorCode {
     ITEM_NOT_ON_SALE(HttpStatus.FORBIDDEN, "판매 중이 아닌 상품입니다."),
     ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 주문에 접근할 권한이 없습니다."),
     ORDER_DELETED(HttpStatus.FORBIDDEN, "삭제된 주문입니다."),
+    // Coupon (403)
+    COUPON_NOT_ACTIVE(HttpStatus.FORBIDDEN, "현재 사용 가능한 쿠폰이 아닙니다."),
+    COUPON_MIN_ORDER_PRICE_NOT_MET(HttpStatus.FORBIDDEN, "최소 주문 금액 조건을 만족하지 않습니다."),
+    COUPON_SOFT_DELETED(HttpStatus.FORBIDDEN, "삭제 처리된 쿠폰입니다."),
+    MEMBER_COUPON_NOT_USABLE(HttpStatus.FORBIDDEN, "현재 사용 가능한 상태의 보유 쿠폰이 아닙니다."),
+    MEMBER_COUPON_NOT_CANCELABLE(HttpStatus.FORBIDDEN, "해당 보유 쿠폰은 사용 취소할 수 없습니다."),
+
 
     // -------------------- 404 Not Found: 리소스 없음 --------------------
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
