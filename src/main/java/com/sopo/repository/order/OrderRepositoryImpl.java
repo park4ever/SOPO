@@ -5,16 +5,12 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sopo.domain.item.QItem;
-import com.sopo.domain.item.QItemOption;
 import com.sopo.domain.order.Order;
 import com.sopo.domain.order.OrderStatus;
-import com.sopo.domain.order.QOrder;
-import com.sopo.domain.order.QOrderItem;
 import com.sopo.repository.order.cond.KeywordTarget;
 import com.sopo.repository.order.cond.OrderQueryCond;
 import com.sopo.repository.order.cond.OrderSortKey;
-import com.sopo.repository.order.cond.SortSpec;
+import com.sopo.repository.order.cond.OrderSortSpec;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -194,8 +190,8 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
 
         //cond.sorts(화이트리스트 키)
         if (!CollectionUtils.isEmpty(c.getSorts())) {
-            for (SortSpec s : c.getSorts()) {
-                OrderSpecifier<?> sp = toSpecifier(s.getKey(), s.getDir());
+            for (OrderSortSpec s : c.getSorts()) {
+                OrderSpecifier<?> sp = toSpecifier(s.key(), s.dir());
                 if (sp != null) specs.add(sp);
             }
         } else if (pageableSort != null && pageableSort.isSorted()) {
@@ -211,7 +207,7 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
         if (specs.isEmpty()) {
             specs.add(new OrderSpecifier<>(DESC, order.createdDate));
         }
-        //tie-breaker(id) -> 이미 id 정렬이 들어있다면 생략
+        //tie-breaker(id)
         boolean hasIdSort = specs.stream().anyMatch(s -> s.getTarget().equals(order.id));
         if (!hasIdSort) {
             specs.add(new OrderSpecifier<>(DESC, order.id));

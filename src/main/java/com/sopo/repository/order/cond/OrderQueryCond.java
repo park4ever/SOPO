@@ -47,5 +47,5 @@ public class OrderQueryCond {
 
     /** 정렬 스펙(화이트리스트) -> 없으면 Pageable.sort를 매핑, 둘 다 없으면 createdDate DESC */
     @Builder.Default
-    private final List<SortSpec> sorts = emptyList();
+    private final List<OrderSortSpec> sorts = emptyList();
 }
