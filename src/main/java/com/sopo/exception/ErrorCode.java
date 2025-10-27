@@ -47,6 +47,8 @@ public enum ErrorCode {
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니 항목을 찾을 수 없습니다."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문 정보를 찾을 수 없습니다."),
     ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "주문 항목을 찾을 수 없습니다."),
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "쿠폰 정보를 찾을 수 없습니다."),
+    MEMBER_COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "보유 쿠폰 정보를 찾을 수 없습니다."),
 
     // -------------------- 409 Conflict: 상태 충돌/중복 --------------------
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
@@ -60,7 +62,9 @@ public enum ErrorCode {
     DUPLICATED_CART_ITEM(HttpStatus.CONFLICT, "동일 옵션이 이미 장바구니에 존재합니다."),
     INVALID_ORDER_STATUS_CHANGE(HttpStatus.CONFLICT, "현재 상태에서는 요청한 상태로 변경할 수 없습니다."),
     ORDER_ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 주문입니다."),
-    ORDER_LINE_IMMUTABLE_AFTER_ORDERED(HttpStatus.CONFLICT, "주문 확정 이후에는 주문 항목을 변경할 수 없습니다.");
+    ORDER_LINE_IMMUTABLE_AFTER_ORDERED(HttpStatus.CONFLICT, "주문 확정 이후에는 주문 항목을 변경할 수 없습니다."),
+    OPTIMISTIC_LOCK_CONFLICT(HttpStatus.CONFLICT, "요청 처리 중 충돌이 발생했습니다. 다시 시도해주세요.");
+
 
     private final HttpStatus status;
     private final String defaultMessage;
