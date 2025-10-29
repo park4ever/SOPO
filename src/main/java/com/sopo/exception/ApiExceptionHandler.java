@@ -29,7 +29,7 @@ import static org.springframework.http.HttpStatus.*;
 @RestControllerAdvice(basePackages = "com.sopo.controller.api")
 public class ApiExceptionHandler {
 
-    // 1) 비즈니스 예외 (우리 커스텀)
+    // 1) 비즈니스 예외 (커스텀)
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex, HttpServletRequest req) {
         var code = ex.getErrorCode();
@@ -134,6 +134,31 @@ public class ApiExceptionHandler {
         var body = ErrorResponse.empty(req.getRequestURI(), FORBIDDEN.value(), "ACCESS_DENIED", "접근 권한이 없습니다.");
         return ResponseEntity.status(FORBIDDEN).body(body);
     }
+
+    // 6.5) 동시성(낙관적 락 충돌)
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLockSpring(
+            org.springframework.dao.OptimisticLockingFailureException ex,
+            HttpServletRequest req
+    ) {
+        var code = ErrorCode.OPTIMISTIC_LOCK_CONFLICT;
+        var body = ErrorResponse.empty(req.getRequestURI(),
+                code.status().value(), code.name(), code.defaultMessage());
+        log.warn("Optimistic lock conflict: {}", ex.getMessage());
+        return ResponseEntity.status(code.status()).body(body);
+    }
+
+    @ExceptionHandler(jakarta.persistence.OptimisticLockException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLockJpa(
+            jakarta.persistence.OptimisticLockException ex,
+            HttpServletRequest req
+    ) {
+        var code = ErrorCode.OPTIMISTIC_LOCK_CONFLICT;
+        var body = ErrorResponse.empty(req.getRequestURI(),
+                code.status().value(), code.name(), code.defaultMessage());
+        return ResponseEntity.status(code.status()).body(body);
+    }
+
 
     // 7) DB 무결성
     @ExceptionHandler(DataIntegrityViolationException.class)

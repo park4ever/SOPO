@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static com.sopo.domain.coupon.MemberCouponStatus.*;
 
@@ -70,11 +71,11 @@ public class MemberCouponServiceImpl implements MemberCouponService {
         Order order = orderRepository.findById(request.orderId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        try {
-            memberCoupon.markUsed(order, request.orderPrice(), now);
-        } catch (OptimisticLockingFailureException e) {
-            throw new BusinessException(ErrorCode.OPTIMISTIC_LOCK_CONFLICT);
+        if (!order.getMember().getId().equals(request.memberId())) {
+            throw new BusinessException(ErrorCode.ORDER_ACCESS_DENIED);
         }
+
+        memberCoupon.markUsed(order, request.orderPrice(), now);
     }
 
     @Override
@@ -89,12 +90,15 @@ public class MemberCouponServiceImpl implements MemberCouponService {
     public int expireAll(LocalDateTime now, int batchSize) {
         int changed = 0;
         for (Long id : memberCouponRepository.findIdsToExpire(now, batchSize)) {
-            memberCouponRepository.findById(id).ifPresent(mc -> {
-                if (mc.getStatus() == ISSUED || mc.getStatus() == CANCELED) {
-                    mc.expire(now);
-                }
-            });
-            changed++;
+            var opt = memberCouponRepository.findById(id);
+            if (opt.isEmpty()) continue;
+
+            MemberCoupon memberCoupon = opt.get();
+            var status = memberCoupon.getStatus();
+            if (status == ISSUED || status == CANCELED) {
+                memberCoupon.expire(now);
+                changed++;
+            }
         }
         return changed;
     }
