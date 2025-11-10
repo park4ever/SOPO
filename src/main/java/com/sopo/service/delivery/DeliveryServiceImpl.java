@@ -29,7 +29,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public Long create(Long memberId, DeliveryCreateRequest request) {
-        Order order = orderRepository.findByIdAndMemberId(request.orderId(), , memberId)
+        Order order = orderRepository.findByIdAndMemberId(request.orderId(), memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (!isCreatable(order.getStatus())) {

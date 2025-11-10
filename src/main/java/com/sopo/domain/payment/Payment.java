@@ -2,6 +2,8 @@ package com.sopo.domain.payment;
 
 import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.order.Order;
+import com.sopo.exception.BusinessException;
+import com.sopo.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,7 +44,20 @@ public class Payment extends BaseEntity {
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
 
+    @Version
+    private Long version;
+
     private Payment(String paymentKey, BigDecimal amount, String method, Order order) {
+        if (paymentKey == null || paymentKey.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_PARAM);
+        }
+        if (amount == null || amount.signum() <= 0) {
+            throw new BusinessException(ErrorCode.PAYMENT_INVALID_AMOUNT);
+        }
+        if (method == null || method.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_PARAM);
+        }
+
         this.paymentKey = paymentKey;
         this.amount = amount;
         this.method = method;
@@ -55,18 +70,34 @@ public class Payment extends BaseEntity {
     }
 
     public void markInProgress() {
+        if (this.status != READY) {
+            throw new BusinessException(ErrorCode.PAYMENT_INVALID_STATUS_TRANSITION);
+        }
         this.status = IN_PROGRESS;
     }
 
     public void complete() {
+        if (this.status != IN_PROGRESS) {
+            throw new BusinessException(ErrorCode.PAYMENT_INVALID_STATUS_TRANSITION);
+        }
         this.status = COMPLETED;
     }
 
     public void fail() {
+        if (this.status != READY && this.status != IN_PROGRESS) {
+            throw new BusinessException(ErrorCode.PAYMENT_INVALID_STATUS_TRANSITION);
+        }
         this.status = FAILED;
     }
 
     public void cancel() {
+        if (this.status != READY && this.status != IN_PROGRESS) {
+            throw new BusinessException(ErrorCode.PAYMENT_INVALID_STATUS_TRANSITION);
+        }
         this.status = CANCELED;
+    }
+
+    public Long getOrderId() {
+        return (order != null) ? order.getId() : null;
     }
 }
