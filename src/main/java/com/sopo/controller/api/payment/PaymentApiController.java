@@ -1,4 +1,4 @@
-package com.sopo.controller.payment.admin;
+package com.sopo.controller.api.payment;
 
 import com.sopo.config.auth.LoginMember;
 import com.sopo.dto.payment.request.PaymentApproveRequest;

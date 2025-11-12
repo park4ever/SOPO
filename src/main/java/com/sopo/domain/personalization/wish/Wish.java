@@ -47,10 +47,15 @@ public class Wish extends BaseEntity {
         return new Wish(member, item);
     }
 
-    public boolean isOwner(Member loginMember) {
-        return loginMember != null
-                && this.member != null
-                && this.member.getId() != null
-                && this.member.getId().equals(loginMember.getId());
+    public boolean isOwner(Long memberId) {
+        return memberId != null && member != null && memberId.equals(member.getId());
+    }
+
+    public Long getMemberId() {
+        return member != null ? member.getId() : null;
+    }
+
+    public Long getItemId() {
+        return item != null ? item.getId() : null;
     }
 }

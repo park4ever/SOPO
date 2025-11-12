@@ -37,6 +37,7 @@ public enum ErrorCode {
     MEMBER_COUPON_NOT_CANCELABLE(HttpStatus.FORBIDDEN, "해당 보유 쿠폰은 사용 취소할 수 없습니다."),
     ADDRESS_NOT_OWNED_BY_MEMBER(HttpStatus.FORBIDDEN, "해당 주소는 회원 소유가 아닙니다."),
     PAYMENT_FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "해당 결제에 접근할 권한이 없습니다."),
+    WISH_FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "해당 찜 정보에 접근할 권한이 없습니다."),
 
     // -------------------- 404 Not Found: 리소스 없음 --------------------
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
@@ -55,6 +56,7 @@ public enum ErrorCode {
     MEMBER_COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "보유 쿠폰 정보를 찾을 수 없습니다."),
     DELIVERY_NOT_FOUND(HttpStatus.NOT_FOUND, "배송 정보를 찾을 수 없습니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "결제 정보를 찾을 수 없습니다."),
+    WISH_NOT_FOUND(HttpStatus.NOT_FOUND, "찜 정보를 찾을 수 없습니다."),
 
     // -------------------- 409 Conflict: 상태 충돌/중복 --------------------
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
@@ -76,7 +78,9 @@ public enum ErrorCode {
     PAYMENT_KEY_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 결제 키입니다."),
     PAYMENT_INVALID_STATUS_TRANSITION(HttpStatus.CONFLICT, "요청한 결제 상태로 변경할 수 없습니다."),
     PAYMENT_AMOUNT_MISMATCH(HttpStatus.CONFLICT, "주문 금액과 결제 금액이 일치하지 않습니다."),
-    PAYMENT_NOT_ALLOWED_FOR_ORDER_STATUS(HttpStatus.CONFLICT, "현재 주문 상태에서는 결제를 처리할 수 없습니다.");
+    PAYMENT_NOT_ALLOWED_FOR_ORDER_STATUS(HttpStatus.CONFLICT, "현재 주문 상태에서는 결제를 처리할 수 없습니다."),
+    WISH_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 찜한 상품입니다."),
+    WISH_ITEM_NOT_AVAILABLE(HttpStatus.CONFLICT, "현재 찜할 수 없는 상품입니다.");
 
     private final HttpStatus status;
     private final String defaultMessage;

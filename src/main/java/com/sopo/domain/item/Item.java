@@ -115,6 +115,26 @@ public class Item extends BaseEntity {
         }
     }
 
+    public Optional<ItemImage> getThumbnailImage() {
+        if (images == null || images.isEmpty()) return Optional.empty();
+
+        //isThumbnail = true 우선
+        var explicit = images.stream()
+                .filter(ItemImage::isThumbnail)
+                .findFirst();
+        if (explicit.isPresent()) return explicit;
+
+        //없으면 sortOrder 가장 작은 것
+        return images.stream()
+                .min(Comparator.comparingInt(ItemImage::getSortOrder));
+    }
+
+    public String getThumbnailUrlOrNull() {
+        return getThumbnailImage()
+                .map(ItemImage::getImageUrl)
+                .orElse(null);
+    }
+
     //옵션 중복 확인(조합 중복 방지 보조)
     public boolean hasOption(ItemColor color, ItemSize size) {
         return options.stream().anyMatch(o ->
