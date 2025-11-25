@@ -3,5 +3,11 @@ package com.sopo.repository.community.review;
 import com.sopo.domain.community.review.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ReviewRepository extends JpaRepository<Review, Long> {
+import java.util.Optional;
+
+public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
+
+    boolean existsByOrderItemId(Long orderItemId);
+
+    Optional<Review> findByIdAndMemberId(Long reviewId, Long memberId);
 }
