@@ -24,6 +24,9 @@ public class Answer extends BaseEntity {
     @Column(name = "answer_id")
     private Long id;
 
+    @Version
+    private Long version;
+
     @OneToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "question_id")
     private Question question;
@@ -39,9 +42,24 @@ public class Answer extends BaseEntity {
         this.question = question;
         this.responder = responder;
         this.content = content;
+
+        question.assignAnswer(this);
+        question.markAnswered();
     }
 
     public static Answer create(Question question, Member responder, String content) {
         return new Answer(question, responder, content);
+    }
+
+    public void changeContent(String content) {
+        this.content = content;
+    }
+
+    public Long getQuestionId() {
+        return (question != null) ? question.getId() : null;
+    }
+
+    public Long getResponderId() {
+        return (responder != null) ? responder.getId() : null;
     }
 }

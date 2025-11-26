@@ -29,6 +29,9 @@ public class Question extends BaseEntity {
     @Column(name = "question_id")
     private Long id;
 
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "member_id")
     private Member asker;
@@ -36,6 +39,9 @@ public class Question extends BaseEntity {
     @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "item_id")
     private Item item;
+
+    @OneToOne(mappedBy = "question", fetch = LAZY)
+    private Answer answer;
 
     @Column(length = 100)
     private String title;
@@ -58,19 +64,31 @@ public class Question extends BaseEntity {
         this.item = item;
         this.title = title;
         this.content = content;
-        this.isPrivate = isPrivate;     //TODO 기본값은 컨트롤러나 서비스에서 false로 설정.
-        this.status = QnaStatus.OPEN;             //생성 시 항상 OPEN
+        this.isPrivate = isPrivate;
+        this.status = QnaStatus.OPEN;   //생성 시 항상 OPEN
     }
 
     public static Question create(Member asker, Item item, String title, String content, boolean isPrivate) {
         return new Question(asker, item, title, content, isPrivate);
     }
 
-    public boolean isOwner(Member loginMember) {
-        return loginMember != null
-            && this.asker != null
-            && this.asker.getId() != null
-            && this.asker.getId().equals(loginMember.getId());
+    public void assignAnswer(Answer answer) {
+        this.answer = answer;
+    }
+
+    public boolean isOwner(Long memberId) {
+        return memberId != null
+                && this.asker != null
+                && this.asker.getId() != null
+                && this.asker.getId().equals(memberId);
+    }
+
+    public Long getAskerId() {
+        return (asker != null) ? asker.getId() : null;
+    }
+
+    public Long getItemId() {
+        return (item != null) ? item.getId() : null;
     }
 
     public void markAnswered() {
@@ -90,8 +108,15 @@ public class Question extends BaseEntity {
         this.content = newContent;
     }
 
-    //상태가 OPEN인지 확인(서비스에서 수정 가능 여부 판단에 필요)
     public boolean isOpen() {
         return this.status == QnaStatus.OPEN;
+    }
+
+    public boolean isAnswered() {
+        return this.status == QnaStatus.ANSWERED;
+    }
+
+    public boolean isClosed() {
+        return this.status == QnaStatus.CLOSED;
     }
 }
