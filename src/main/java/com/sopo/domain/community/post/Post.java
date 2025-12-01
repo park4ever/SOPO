@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 import static jakarta.persistence.FetchType.*;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
@@ -27,6 +29,9 @@ public class Post extends BaseEntity {
     @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "post_id")
     private Long id;
+
+    @Version
+    private Long version;
 
     @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "member_id")
@@ -54,10 +59,11 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
-    public boolean isOwner(Member loginMember) {
-        return loginMember != null
-                && this.author != null
-                && this.author.getId() != null
-                && this.author.getId().equals(loginMember.getId());
+    public Long getAuthorId() {
+        return (author != null) ? author.getId() : null;
+    }
+
+    public boolean isOwner(Long memberId) {
+        return memberId != null && Objects.equals(getAuthorId(), memberId);
     }
 }

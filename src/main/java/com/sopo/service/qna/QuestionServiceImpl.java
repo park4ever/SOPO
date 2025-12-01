@@ -150,6 +150,7 @@ public class QuestionServiceImpl implements QuestionService {
                 q.getCreatedDate(),
                 q.getLastModifiedDate(),
                 q.getAnsweredAt(),
+                q.getVersion(),
                 answer
         );
     }
