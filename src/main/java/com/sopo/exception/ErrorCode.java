@@ -44,6 +44,8 @@ public enum ErrorCode {
     ANSWER_FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "해당 답변에 접근할 권한이 없습니다."),
     ANSWER_NOT_ALLOWED_FOR_USER(HttpStatus.FORBIDDEN, "판매자만 답변을 등록할 수 있습니다."),
     POST_FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "해당 게시글에 접근할 권한이 없습니다."),
+    ADMIN_NOTICE_FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "공지 사항에 접근할 권한이 없습니다."),
+
 
 
 
@@ -70,6 +72,8 @@ public enum ErrorCode {
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "문의 정보를 찾을 수 없습니다."),
     ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "답변 정보를 찾을 수 없습니다."),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글 정보를 찾을 수 없습니다."),
+    ADMIN_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "공지 사항 정보를 찾을 수 없습니다."),
+
 
 
     // -------------------- 409 Conflict: 상태 충돌/중복 --------------------
@@ -100,7 +104,8 @@ public enum ErrorCode {
     QUESTION_ALREADY_ANSWERED(HttpStatus.CONFLICT, "해당 문의에는 이미 답변이 존재합니다."),
     QUESTION_CLOSED(HttpStatus.CONFLICT, "종료된 문의에는 답변할 수 없습니다."),
     QUESTION_UPDATE_NOT_ALLOWED(HttpStatus.CONFLICT, "현재 상태에서는 문의 내용을 수정할 수 없습니다."),
-    ANSWER_UPDATE_NOT_ALLOWED(HttpStatus.CONFLICT, "현재 상태에서는 답변을 수정할 수 없습니다.");
+    ANSWER_UPDATE_NOT_ALLOWED(HttpStatus.CONFLICT, "현재 상태에서는 답변을 수정할 수 없습니다."),
+    ADMIN_NOTICE_UPDATE_CONFLICT(HttpStatus.CONFLICT, "공지 사항이 이미 다른 요청에 의해 수정되었습니다.");
 
     private final HttpStatus status;
     private final String defaultMessage;
