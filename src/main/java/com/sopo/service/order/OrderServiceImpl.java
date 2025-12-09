@@ -52,12 +52,8 @@ public class OrderServiceImpl implements OrderService {
     public void cancel(Long memberId, Long orderId, OrderCancelRequest reason) {
         Order order = getMyOrderWithDetails(memberId, orderId);
 
-        var current = order.getStatus();
-        if (current == OrderStatus.CANCELED) throw new BusinessException(ORDER_ALREADY_CANCELED);
-        if (!current.isUserCancelable()) throw new BusinessException(INVALID_ORDER_STATUS_CHANGE);
-
-        order.changeStatus(OrderStatus.CANCELED);   //전이
-        stockRestorer.restore(order);               //재고/판매량 복원
+        order.cancelByUser();           //도메인에 전이 책임 위임
+        stockRestorer.restore(order);   //재고/판매량 복원
         //TODO : reason 보관 로직이 생기면 여기서 기록
     }
 
@@ -94,13 +90,8 @@ public class OrderServiceImpl implements OrderService {
     public void updateStatusAsAdmin(Long orderId, OrderStatus targetStatus) {
         Order order = getOrderWithDetails(orderId);
 
-        var current = order.getStatus();
-        if (current == targetStatus) return;
-        if (!current.canTransitionTo(targetStatus)) {
-            throw new BusinessException(INVALID_ORDER_STATUS_CHANGE);
-        }
+        order.changeStatusByAdmin(targetStatus);    //전이 + 검증 도메인 위임
 
-        order.changeStatus(targetStatus);           //전이
         if (targetStatus == OrderStatus.CANCELED) { //필요 시 복원
             stockRestorer.restore(order);
         }

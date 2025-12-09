@@ -3,6 +3,8 @@ package com.sopo.domain.order;
 import com.sopo.common.money.Money;
 import com.sopo.domain.common.BaseEntity;
 import com.sopo.domain.member.Member;
+import com.sopo.exception.BusinessException;
+import com.sopo.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +13,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sopo.domain.order.OrderStatus.*;
+import static com.sopo.exception.ErrorCode.*;
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
@@ -49,7 +53,7 @@ public class Order extends BaseEntity {
 
     private Order(Member member, List<OrderItem> orderItems) {
         this.member = member;
-        this.status = OrderStatus.ORDERED;
+        this.status = ORDERED;
         this.totalPrice = calculateTotalPrice(orderItems);
         this.isDeleted = false;
         orderItems.forEach(this::addOrderItem);
@@ -73,8 +77,37 @@ public class Order extends BaseEntity {
         }
     }
 
-    public void changeStatus(OrderStatus status) {
-        this.status = status;
+    public void cancelByUser() {
+        var current = this.status;
+
+        if (current == CANCELED) {
+            throw new BusinessException(ORDER_ALREADY_CANCELED);
+        }
+        if (!current.isUserCancelable()) {
+            throw new BusinessException(INVALID_ORDER_STATUS_CHANGE);
+        }
+
+        this.status = CANCELED;
+    }
+
+    public void changeStatusByAdmin(OrderStatus targetStatus) {
+        var current = this.status;
+
+        if (current == targetStatus) {
+            return;
+        }
+        if (!current.canTransitionTo(targetStatus)) {
+            throw new BusinessException(INVALID_ORDER_STATUS_CHANGE);
+        }
+
+        this.status = targetStatus;
+    }
+
+    public void markAsPaid() {
+        if (this.status != ORDERED) {
+            throw new BusinessException(PAYMENT_NOT_ALLOWED_FOR_ORDER_STATUS);
+        }
+        this.status = PAID;
     }
 
     public void markAsDeleted() {

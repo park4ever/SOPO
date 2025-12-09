@@ -72,10 +72,15 @@ public class ItemOption extends BaseEntity {
         this.item = item;
     }
 
-    //TODO 동시 주문 시 재고 차감에 대한 동시성 보장 필요 (서비스 단에서 Lock 처리 예정)
+    // NOTE: 재고 동시성 제어는 서비스/프로세서(OrderPlacementProcessor 등) 레벨에서
+    // PESSIMISTIC_WRITE 또는 @Version을 통해 보장해야 한다.
+    // 이 메서드는 "이미 락이 잡힌 상태"에서만 호출된다는 전제를 갖는다.
     public void decreaseStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("차감할 수량은 1 이상이어야 합니다.");
+        }
         if (this.stock < quantity) {
-            throw new IllegalArgumentException("상품의 재고가 부족합니다.");
+            throw new BusinessException(ErrorCode.QUANTITY_EXCEEDS_STOCK);
         }
         this.stock -= quantity;
         if (this.stock == 0) {

@@ -89,19 +89,10 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         //결제 상태 전이 가능 여부 확인
-        if (payment.getStatus() == PaymentStatus.COMPLETED
-                || payment.getStatus() == PaymentStatus.CANCELED
-                || payment.getStatus() == PaymentStatus.FAILED) {
-            throw new BusinessException(ErrorCode.PAYMENT_INVALID_STATUS_TRANSITION);
-        }
+        transitionPaymentToCompleted(payment);
 
-        //PaymentStatus.READY였다면 IN_PROGRESS로 한 번 올리고, 최종 COMPLETED 처리
-        if (payment.getStatus() == PaymentStatus.READY) {
-            payment.markInProgress();
-        }
-        payment.complete();
-
-        //TODO : order 상태 PAID 전이(Order 도메인 구조 확인하고 맞춰보기)
+        //주문 상태 전이(도메인에 위임)
+        order.markAsPaid();
     }
 
     @Override
@@ -140,6 +131,22 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
         return toResponse(payment);
+    }
+
+    private void transitionPaymentToCompleted(Payment payment) {
+        PaymentStatus current = payment.getStatus();
+
+        if (current == PaymentStatus.READY) {
+            //READY -> IN_PROGRESS -> COMPLETED
+            payment.markInProgress();
+            payment.complete();
+        } else if (current == PaymentStatus.IN_PROGRESS) {
+            //IN_PROGRESS -> COMPLETED
+            payment.complete();
+        } else {
+            //COMPLETED -> CANCELED -> FAILED 등
+            throw new BusinessException(ErrorCode.PAYMENT_INVALID_STATUS_TRANSITION);
+        }
     }
 
     private PaymentResponse toResponse(Payment payment) {
